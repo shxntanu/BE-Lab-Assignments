@@ -76,13 +76,15 @@ operations:
 
     To get test ETH for your account, go [here](https://cloud.google.com/application/web3/faucet/ethereum/sepolia) to claim 0.05 ETH for free from Google.
 
+    Or you can test it out on the Remix VM itself.
+
     ![image](https://github.com/user-attachments/assets/3add782c-ca61-419c-b260-53bf8ea322a5)
 
     Hit Deploy to deploy the contract. Metamask will open to confirm the same.
    
     ![image](https://github.com/user-attachments/assets/5cc574c1-c7ba-4fae-861d-271e957f678b)
 
-6. Interact with the Contract
+7. Interact with the Contract
 
    Once deployed, you'll see the contract under the "Deployed Contracts" section.
 
@@ -92,5 +94,21 @@ operations:
    - Deposit: To deposit Ether, enter an amount in the "Value" field (in ETH), and click deposit.
    - Withdraw: To withdraw Ether, enter the amount (in wei) in the withdraw field, and click withdraw.
    - Get Balance: To check your balance, click the getBalance button.
-  
 
+## Testing
+
+1. Select a test account in Remix VM
+
+![image](https://github.com/user-attachments/assets/23d61f3a-8c57-49da-89aa-32b5277874ff)
+
+2. Select the amount you want to deposit
+
+![image](https://github.com/user-attachments/assets/026016d1-0e44-4f4e-b9c8-5e65e67d53df)
+
+3. Hit Deposit to deposit the amount
+
+![image](https://github.com/user-attachments/assets/e7aabffd-9408-41b1-ae08-7ca49c085f26)
+
+4. Hit Get Balance to view the current balance
+
+![image](https://github.com/user-attachments/assets/f3fdef58-ae43-4253-903d-b940aac2ce76)
