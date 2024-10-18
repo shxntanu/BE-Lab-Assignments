@@ -1,12 +1,10 @@
 #!/bin/bash
 
-# GitHub repository details
 REPO_OWNER="shxntanu"
 REPO_NAME="BE-Lab-Assignments"
 GITHUB_API="https://api.github.com"
 RAW_CONTENT_URL="https://raw.githubusercontent.com"
 
-# Ask for the subject (directory)
 echo "Enter the subject (DAA / ML / BT):"
 read subject
 
@@ -18,10 +16,8 @@ case "$subject" in
     ;;
 esac
 
-# List files in the directory
 files_json=$(wget -qO- "${GITHUB_API}/repos/${REPO_OWNER}/${REPO_NAME}/contents/${subject}")
 
-# Check if the directory exists
 if echo "$files_json" | grep -q "Not Found"; then
     echo "Error: Directory not found."
     exit 1
@@ -36,11 +32,9 @@ while IFS= read -r file; do
     counter=$((counter + 1))
 done <<<"$file_list"
 
-# Ask user to select a file
 echo "Enter the number of the file you want to download:"
 read file_number
 
-# Get the selected file name
 selected_file=$(echo "$file_list" | sed -n "${file_number}p")
 
 if [ -z "$selected_file" ]; then
