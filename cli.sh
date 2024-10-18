@@ -42,7 +42,7 @@ fi
 SELECTED_FILE="${files[$((FILE_NUMBER - 1))]}"
 file_url="https://raw.githubusercontent.com/shxntanu/BE-Lab-Assignments/main/$SUBJECT/$SELECTED_FILE"
 
-curl -O "$file_url" || {
+wget -qO- "$file_url" || {
     echo "Failed to download file."
     exit 1
 }
