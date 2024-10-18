@@ -1,50 +1,58 @@
 #!/bin/bash
 
-echo "Enter subject (DAA/ML/BT): "
-read -r SUBJECT
+# GitHub repository details
+REPO_OWNER="shxntanu"
+REPO_NAME="BE-Lab-Assignments"
+GITHUB_API="https://api.github.com"
+RAW_CONTENT_URL="https://raw.githubusercontent.com"
 
-BASE_URL="https://api.github.com/repos/shxntanu/BE-Lab-Assignments/contents/"
+# Ask for the subject (directory)
+echo "Enter the subject (DAA / ML / BT):"
+read subject
 
-case "$SUBJECT" in
-"DAA" | "ML" | "BT")
-    SUBJECT_URL="${BASE_URL}${SUBJECT}"
-    ;;
+case "$subject" in
+"DAA" | "ML" | "BT") ;;
 *)
     echo "Invalid subject name. Please choose from DAA, ML, or BT."
     exit 1
     ;;
 esac
 
-RESPONSE=$(curl -s "$SUBJECT_URL")
+# List files in the directory
+files_json=$(wget -qO- "${GITHUB_API}/repos/${REPO_OWNER}/${REPO_NAME}/contents/${subject}")
 
-# Check if the response contains files
-if [[ "$RESPONSE" == *"Not Found"* ]]; then
-    echo "Directory not found on GitHub."
+# Check if the directory exists
+if echo "$files_json" | grep -q "Not Found"; then
+    echo "Error: Directory not found."
     exit 1
 fi
 
-# Parse the file names from the GitHub API response using `jq`
-files=($(echo "$RESPONSE" | jq -r '.[].name'))
+# Parse and display files
+echo "Files in $subject:"
+file_list=$(echo "$files_json" | sed -n 's/.*"name": "\([^"]*\)".*/\1/p')
+counter=1
+while IFS= read -r file; do
+    echo "$counter) $file"
+    counter=$((counter + 1))
+done <<<"$file_list"
 
-echo "Files in the $SUBJECT directory on GitHub:"
-for i in "${!files[@]}"; do
-    echo "$((i + 1)). ${files[i]}"
-done
-
+# Ask user to select a file
 echo "Enter the number of the file you want to download:"
-read -r FILE_NUMBER
+read file_number
 
-if ! [[ "$FILE_NUMBER" =~ ^[0-9]+$ ]] || [ "$FILE_NUMBER" -lt 1 ] || [ "$FILE_NUMBER" -gt "${#files[@]}" ]; then
+# Get the selected file name
+selected_file=$(echo "$file_list" | sed -n "${file_number}p")
+
+if [ -z "$selected_file" ]; then
     echo "Invalid selection."
     exit 1
 fi
 
-SELECTED_FILE="${files[$((FILE_NUMBER - 1))]}"
-file_url="https://raw.githubusercontent.com/shxntanu/BE-Lab-Assignments/main/$SUBJECT/$SELECTED_FILE"
+wget -q "${RAW_CONTENT_URL}/${REPO_OWNER}/${REPO_NAME}/main/${subject}/${selected_file}" -O "$selected_file"
 
-wget -qO- "$file_url" || {
-    echo "Failed to download file."
+if [ $? -eq 0 ]; then
+    echo "File '$selected_file' has been downloaded successfully."
+else
+    echo "Error downloading the file."
     exit 1
-}
-
-echo "File '$SELECTED_FILE' downloaded successfully."
+fi
