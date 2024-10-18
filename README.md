@@ -4,7 +4,7 @@ A collection of all Final Year Computer Engineering assignments from Savitribai 
 
 ## Downloading Files
 
-To download the file you want, run the following shell script (using wget as it comes preinstalled in most Linux distros):
+To download the file you want, run the following shell script (using `wget` as it comes preinstalled in most Linux distros):
 
 ```bash
 bash -c "$(wget -qO- https://raw.githubusercontent.com/shxntanu/BE-Lab-Assignments/main/cli.sh)"
