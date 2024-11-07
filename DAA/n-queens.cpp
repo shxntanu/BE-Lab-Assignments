@@ -82,10 +82,13 @@ bool solveNQUtil(vector<vector<int>> &board, int col) {
 bool solveNQ() {
   cout << "Enter size of board: ";
   cin >> N;
-  cout << "Enter row and col of first queen to be placed:\nrow: ";
+  cout << "Enter row and col of first queen to be placed:\nrow (1-" << N
+       << "): ";
   cin >> ROW;
-  cout << "\ncol: ";
+  ROW--;
+  cout << "\ncol(1-" << N << "): ";
   cin >> COL;
+  COL--;
   cout << endl;
   vector<vector<int>> board(N, vector<int>(N, 0));
 
