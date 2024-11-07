@@ -32,8 +32,10 @@ int knapsack(int W, vector<Item> &items) {
 }
 
 int main() {
-  int W = 50;                                            // Knapsack capacity
-  vector<Item> items = {{10, 60}, {20, 100}, {30, 120}}; // {weight, value}
+  int W = 269; // Knapsack capacity
+  vector<Item> items = {{95, 55}, {4, 10},  {60, 47}, {32, 5},
+                        {23, 4},  {72, 50}, {80, 8},  {62, 61},
+                        {65, 85}, {46, 87}}; // {weight, value}
 
   int max_value = knapsack(W, items);
   cout << "Maximum value: " << max_value << endl;
