@@ -19,21 +19,22 @@ void printSolution(vector<vector<int>> board) {
 bool isSafe(vector<vector<int>> board, int row, int col) {
   int i, j;
 
+  // horizontal
   for (i = 0; i < col; i++)
     if (board[row][i])
       return false;
 
-  // Added logic for first queen placed
+  // vertical
   for (i = col + 1; i < N; i++)
     if (board[row][i])
       return false;
 
-  // Added logic for first queen placed
+  // bottom right diagonal
   for (i = row, j = col; i < N && j < N; i++, j++)
     if (board[i][j])
       return false;
 
-  // Added logic for first queen placed
+  // bottom left diagonal
   for (i = row, j = col; i >= 0 && j < N; i--, j++)
     if (board[i][j])
       return false;
@@ -63,11 +64,8 @@ bool solveNQUtil(vector<vector<int>> &board, int col) {
   }
 
   else {
-
     for (int i = 0; i < N; i++) {
-
       if (isSafe(board, i, col)) {
-
         board[i][col] = 1;
 
         if (solveNQUtil(board, col + 1))
