@@ -1,86 +1,108 @@
-#include <iostream>
-#include <vector>
-
+#include <bits/stdc++.h>
 using namespace std;
 
-bool isSafe(const vector<vector<int>> &board, int row, int col, int N) {
-  // Check the current column
-  for (int i = 0; i < row; ++i) {
-    if (board[i][col] == 1) {
-      return false;
-    }
-  }
+int COL;
+int ROW;
+int N = 4;
 
-  // Check the upper-left diagonal
-  for (int i = row, j = col; i >= 0 && j >= 0; --i, --j) {
-    if (board[i][j] == 1) {
-      return false;
-    }
+void printSolution(vector<vector<int>> board) {
+  for (int i = 0; i < N; i++) {
+    for (int j = 0; j < N; j++)
+      if (board[i][j])
+        cout << "Q ";
+      else
+        cout << ". ";
+    printf("\n");
   }
+}
 
-  // Check the upper-right diagonal
-  for (int i = row, j = col; i >= 0 && j < N; --i, ++j) {
-    if (board[i][j] == 1) {
+bool isSafe(vector<vector<int>> board, int row, int col) {
+  int i, j;
+
+  for (i = 0; i < col; i++)
+    if (board[row][i])
       return false;
-    }
-  }
+
+  // Added logic for first queen placed
+  for (i = col + 1; i < N; i++)
+    if (board[row][i])
+      return false;
+
+  // Added logic for first queen placed
+  for (i = row, j = col; i < N && j < N; i++, j++)
+    if (board[i][j])
+      return false;
+
+  // Added logic for first queen placed
+  for (i = row, j = col; i >= 0 && j < N; i--, j++)
+    if (board[i][j])
+      return false;
+
+  for (i = row, j = col; i >= 0 && j >= 0; i--, j--)
+    if (board[i][j])
+      return false;
+
+  for (i = row, j = col; j >= 0 && i < N; i++, j--)
+    if (board[i][j])
+      return false;
 
   return true;
 }
 
-bool solveNQueens(vector<vector<int>> &board, int row, int N) {
-  if (row >= N) {
-    return true; // All queens are placed
-  }
+bool solveNQUtil(vector<vector<int>> &board, int col) {
 
-  for (int col = 0; col < N; ++col) {
-    if (isSafe(board, row, col, N)) {
-      board[row][col] = 1; // Place queen
+  if (col >= N)
+    return true;
 
-      if (solveNQueens(board, row + 1, N)) {
-        return true;
-      }
-
-      board[row][col] = 0; // Backtrack
+  if (col == COL) {
+    if (solveNQUtil(board, col + 1))
+      return true;
+    else {
+      return false;
     }
   }
 
-  return false; // No solution found
+  else {
+
+    for (int i = 0; i < N; i++) {
+
+      if (isSafe(board, i, col)) {
+
+        board[i][col] = 1;
+
+        if (solveNQUtil(board, col + 1))
+          return true;
+
+        board[i][col] = 0;
+      }
+    }
+  }
+
+  return false;
 }
 
-void printBoard(const vector<vector<int>> &board, int N) {
-  for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < N; ++j) {
-      cout << (board[i][j] ? "Q " : ". ");
-    }
-    cout << endl;
+bool solveNQ() {
+  cout << "Enter size of board: ";
+  cin >> N;
+  cout << "Enter row and col of first queen to be placed:\nrow: ";
+  cin >> ROW;
+  cout << "\ncol: ";
+  cin >> COL;
+  cout << endl;
+  vector<vector<int>> board(N, vector<int>(N, 0));
+
+  board[ROW][COL] = 1;
+
+  if (solveNQUtil(board, 0) == false) {
+    cout << "Solution does not exist";
+    return false;
   }
+
+  printSolution(board);
+  return true;
 }
 
 int main() {
-  int N;
-  cout << "Enter the number of queens (N): ";
-  cin >> N;
-
-  vector<vector<int>> board(N, vector<int>(N, 0));
-
-  // Try placing the first queen in every column of the first row
-  bool solutionFound = false;
-  for (int col = 0; col < N; ++col) {
-    board[0][col] = 1;               // Place the first queen
-    if (solveNQueens(board, 1, N)) { // Start solving for the rest of the queens
-      solutionFound = true;
-      break;
-    }
-    board[0][col] = 0; // Backtrack if no solution found
-  }
-
-  if (solutionFound) {
-    cout << "Solution:\n";
-    printBoard(board, N);
-  } else {
-    cout << "No solution exists.\n";
-  }
-
+  solveNQ();
   return 0;
 }
