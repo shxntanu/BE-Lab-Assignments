@@ -9,3 +9,9 @@ To download the file you want, run the following shell script (using `wget` as i
 ```bash
 bash -c "$(wget -qO- https://raw.githubusercontent.com/shxntanu/BE-Lab-Assignments/main/cli.sh)"
 ```
+
+or use the shortened version:
+
+```bash
+bash -c "$(wget -qO- https://bit.ly/lp3-cli)"
+```
