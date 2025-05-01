@@ -69,3 +69,10 @@ int main() {
 
   return 0;
 }
+
+// CUDA Driver Check Commands
+// nvidia-smi       # checks if the GPU is visible and drivers are working
+// nvcc --version   # checks if CUDA compiler is installed
+
+// Compile: nvcc -o vector_add cuda_va.cu
+// Run: ./vector_add
