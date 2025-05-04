@@ -9,9 +9,9 @@ echo "Enter the subject (DAA / ML / BT):"
 read subject
 
 case "$subject" in
-"DAA" | "ML" | "BT") ;;
+"DAA" | "ML" | "BT" | "HPC" | "DL") ;;
 *)
-    echo "Invalid subject name. Please choose from DAA, ML, or BT."
+    echo "Invalid subject name. Please choose from DAA, ML, BT, HPC or DL."
     exit 1
     ;;
 esac
