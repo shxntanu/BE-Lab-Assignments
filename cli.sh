@@ -5,7 +5,7 @@ REPO_NAME="BE-Lab-Assignments"
 GITHUB_API="https://api.github.com"
 RAW_CONTENT_URL="https://raw.githubusercontent.com"
 
-echo "Enter the subject (DAA / ML / BT):"
+echo "Enter the subject (DAA / ML / BT / HPC / DL):"
 read subject
 
 case "$subject" in
