@@ -82,6 +82,7 @@ public:
         int node = curr_level[i];
         for (int neighbour : adj_matrix[node]) {
           if (!visited[neighbour]) {
+            // ensure thread-safe access to visited[]
 #pragma omp critical
             {
               visited[neighbour] = true;
@@ -115,11 +116,14 @@ public:
   }
 
   void parallel_dfs(int start_vertex) {
+    // parallel section to process each neighbor of the start node
 #pragma omp parallel
     {
 #pragma omp single
-      { parallel_dfs_util(start_vertex); }
-    }
+      { 
+        // ensures only one thread starts the root DFS
+        parallel_dfs_util(start_vertex); }
+      }
   }
 };
 
