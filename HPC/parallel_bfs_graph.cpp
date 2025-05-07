@@ -3,119 +3,122 @@
 using namespace std;
 
 class Graph {
-  int num_vertices;
-  vector<vector<int>> adjMatrix;
-
 public:
-  Graph(int vertices) {
-    this->num_vertices = vertices;
-    this->adjMatrix.resize(num_vertices);
+  int vertices;
+  vector<vector<int>> adj_matrix;
+  vector<bool> visited;
+
+  Graph(int v) {
+    this->vertices = v;
+    this->adj_matrix.resize(v);
+    this->visited.resize(v, false);
   }
 
   void add_edge(int u, int v) {
-    adjMatrix[u].push_back(v);
-    adjMatrix[v].push_back(u);
+    adj_matrix[u].push_back(v);
+    adj_matrix[v].push_back(u);
   }
 
-  void parallel_bfs(int startVertex) {
-    cout << "Parallel BFS of Graph from vertex " << startVertex
-         << "is: " << endl;
+  void reset_visited() { fill(visited.begin(), visited.end(), false); }
 
-    vector<bool> visited(num_vertices, false);
+  void serial_bfs(int start_vertex) {
     queue<int> q;
+    q.push(start_vertex);
+    visited[start_vertex] = true;
 
-#pragma omp critical
-    {
-      q.push(startVertex);
-      visited[startVertex] = true;
-    }
+    while (!q.empty()) {
+      int node = q.front();
+      q.pop();
+      cout << node << " ";
 
-#pragma omp parallel
-    {
-      while (!q.empty()) {
-        int node = -1;
-
-#pragma omp critical
-        {
-          if (!q.empty()) {
-            node = q.front();
-            q.pop();
-            cout << node;
-          }
+      for (int neighbour : adj_matrix[node]) {
+        if (!visited[neighbour]) {
+          visited[neighbour] = true;
+          q.push(neighbour);
         }
-
-        if (node == -1)
-          break;
-
-        vector<int> neighbours;
-#pragma omp critical
-        {
-          neighbours = adjMatrix[node];
-        }
-
-        for (int n : neighbours) {
-#pragma omp critical
-          {
-            if (!visited[n]) {
-              visited[n] = true;
-              q.push(n);
-            }
-          }
-        }
-
-        cout << endl;
       }
     }
   }
 
-  void parallel_dfs(int startVertex) {
-    cout << "Parallel BFS of Graph from vertex " << startVertex
-         << "is: " << endl;
-
-    vector<bool> visited(num_vertices, false);
+  void serial_dfs(int start_vertex) {
     stack<int> s;
+    s.push(start_vertex);
+    visited[start_vertex] = true;
 
-#pragma omp critical
-    {
-      s.push(startVertex);
-      visited[startVertex] = true;
+    while (!s.empty()) {
+      int node = s.top();
+      s.pop();
+      cout << node << " ";
+
+      for (auto it = adj_matrix[node].rbegin(); it != adj_matrix[node].rend();
+           it++) {
+        int neighbour = *it;
+        if (!visited[neighbour]) {
+          visited[neighbour] = true;
+          s.push(neighbour);
+        }
+      }
     }
+  }
 
-#pragma omp parallel
-    {
-      while (!s.empty()) {
-        int node = -1;
+  void parallel_bfs(int start_vertex) {
+    queue<int> q;
+    q.push(start_vertex);
+    visited[start_vertex] = true;
 
+    while (!q.empty()) {
+      int level_size = q.size();
+      vector<int> curr_level;
+
+      for (int i = 0; i < level_size; i++) {
+        int node = q.front();
+        q.pop();
+        cout << node << " ";
+        curr_level.push_back(node);
+      }
+
+#pragma omp parallel for
+      for (int i = 0; i < curr_level.size(); i++) {
+        int node = curr_level[i];
+        for (int neighbour : adj_matrix[node]) {
+          if (!visited[neighbour]) {
 #pragma omp critical
-        {
-          if (!s.empty()) {
-            node = s.top();
-            s.pop();
-            cout << node;
-          }
-        }
-
-        if (node == -1)
-          break;
-
-        vector<int> neighbours;
-#pragma omp critical
-        {
-          neighbours = adjMatrix[node];
-        }
-
-        for (int n : neighbours) {
-#pragma omp critical
-          {
-            if (!visited[n]) {
-              visited[n] = true;
-              s.push(n);
+            {
+              visited[neighbour] = true;
+              q.push(neighbour);
             }
           }
         }
-
-        cout << endl;
       }
+    }
+  }
+
+  void parallel_dfs_util(int vertex) {
+    if (visited[vertex])
+      return;
+
+    visited[vertex] = true;
+    cout << vertex << " ";
+
+#pragma omp parallel for
+    for (int i = 0; i < adj_matrix[vertex].size(); i++) {
+      int u = adj_matrix[vertex][i];
+
+#pragma omp critical
+      {
+        if (!visited[u]) {
+#pragma omp task
+          parallel_dfs_util(u);
+        }
+      }
+    }
+  }
+
+  void parallel_dfs(int start_vertex) {
+#pragma omp parallel
+    {
+#pragma omp single
+      { parallel_dfs_util(start_vertex); }
     }
   }
 };
@@ -131,11 +134,32 @@ int main() {
   g.add_edge(3, 5);
   g.add_edge(4, 5);
 
-  g.parallel_bfs(0);
-  g.parallel_dfs(0);
+  cout << "Serial BFS: ";
+  double start = omp_get_wtime();
+  g.serial_bfs(1);
+  double end = omp_get_wtime();
+  cout << endl << "Time: " << (end - start) * 1000 << "ms";
+  g.reset_visited();
+
+  cout << endl << "Serial DFS: ";
+  start = omp_get_wtime();
+  g.serial_dfs(1);
+  end = omp_get_wtime();
+  cout << endl << "Time: " << (end - start) * 1000 << "ms";
+  g.reset_visited();
+
+  cout << endl << "Parallel BFS: ";
+  start = omp_get_wtime();
+  g.parallel_bfs(1);
+  end = omp_get_wtime();
+  cout << endl << "Time: " << (end - start) * 1000 << "ms";
+  g.reset_visited();
+
+  cout << endl << "Parallel DFS: ";
+  start = omp_get_wtime();
+  g.parallel_dfs(1);
+  end = omp_get_wtime();
+  cout << endl << "Time: " << (end - start) * 1000 << "ms" << endl;
 
   return 0;
 }
-
-// Compile with: g++ -fopenmp -o graph parallel_bfs_graph.cpp
-// Run with: ./graph
