@@ -1,101 +1,113 @@
+#include <cuda_runtime.h>
 #include <bits/stdc++.h>
+
 using namespace std;
+using namespace std::chrono;
 
-// CUDA code to multiply matrices
 __global__ void multiply(int *A, int *B, int *C, int size) {
-  // Uses thread indices and block indices to compute each element
-  int row = blockIdx.y * blockDim.y + threadIdx.y;
-  int col = blockIdx.x * blockDim.x + threadIdx.x;
+    // blockIdx = which block
+    // threadIdx = which thread within the block
+    // blockDim = size of the block
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
 
-  if (row < size && col < size) {
-    int sum = 0;
-    for (int i = 0; i < size; i++) {
-      sum += A[row * size + i] * B[i * size + col];
+    if (row < size && col < size) {
+        int sum = 0;
+        for (int i=0; i<size; i++) {
+            sum += A[row * size + i] * B[i * size + col];  // dot product
+        }
+        C[row * size + col] = sum;
     }
-    C[row * size + col] = sum;
-  }
 }
+
+
+// optional: sequential matrix multiplication
+void seqMultiply(int *A, int *B, int *C, int size) {
+    // initialize result matrix to 0
+    for (int i = 0; i <size*size; i++) {
+        C[i] = 0;
+    }
+
+    for (int row=0; row<size; row++) {
+        for (int col=0; col<size; col++) {
+            int sum = 0;
+            for (int k=0; k<size; k++) {
+                sum += A[row * size + k] * B[k * size + col];
+            }
+            C[row * size + col] = sum;
+        }
+    }
+}
+
 
 void initialize(int *matrix, int size) {
-  for (int i = 0; i < size * size; i++) {
-    matrix[i] = rand() % 10;
-  }
+    for (int i=0; i<size*size; i++) {
+        matrix[i] = rand() % 10;
+    }
 }
+
 
 void print(int *matrix, int size) {
-  for (int row = 0; row < size; row++) {
-    for (int col = 0; col < size; col++) {
-      cout << matrix[row * size + col] << " ";
+    for (int row=0; row<size; row++) {
+        for (int col=0; col<size; col++) {
+            cout<<matrix[row*size + col]<<" ";
+        }
+        cout<<endl;
     }
-    cout << '\n';
-  }
-  cout << '\n';
+    cout<<endl;
 }
+
 
 int main() {
-  int *A, *B, *C;
 
-  int N = 2;
-  int blockSize = 16;
+    int N = 3;
+    int matrixSize = N * N;
+    size_t matrixBytes = matrixSize * sizeof(int);
 
-  int matrixSize = N * N;
-  size_t matrixBytes = matrixSize * sizeof(int);
+    int *A, *B, *C;
+    A = new int[matrixSize];
+    B = new int[matrixSize];
+    C = new int[matrixSize];
 
-  A = new int[matrixSize];
-  B = new int[matrixSize];
-  C = new int[matrixSize];
+    initialize(A, N);
+    initialize(B, N);
 
-  initialize(A, N);
-  initialize(B, N);
-  cout << "Matrix A: \n";
-  print(A, N);
+    cout<<"Matrix A: \n";
+    print(A, N);
+    cout<<"Matrix B: \n";
+    print(B, N);
 
-  cout << "Matrix B: \n";
-  print(B, N);
+    int *X, *Y, *Z;
+    cudaMalloc(&X, matrixBytes);
+    cudaMalloc(&Y, matrixBytes);
+    cudaMalloc(&Z, matrixBytes);
 
-  int *X, *Y, *Z;
-  // Allocate space
-  cudaMalloc(&X, matrixBytes);
-  cudaMalloc(&Y, matrixBytes);
-  cudaMalloc(&Z, matrixBytes);
+    cudaMemcpy(X, A, matrixBytes, cudaMemcpyHostToDevice);
+    cudaMemcpy(Y, B, matrixBytes, cudaMemcpyHostToDevice);
 
-  // Copy values from A to X
-  cudaMemcpy(X, A, matrixBytes, cudaMemcpyHostToDevice);
+    // threads per CTA dimension
+    int THREADS = 3;
 
-  // Copy values from A to X and B to Y
-  cudaMemcpy(Y, B, matrixBytes, cudaMemcpyHostToDevice);
+    // blocks per grid dimension (assumes N is divisible by THREADS)
+    int BLOCKS = N / THREADS;
 
-  // Threads per CTA dimension
-  int THREADS = 2;
+    dim3 threads(THREADS, THREADS);  // each block has 9 threads arranged in a 3×3 grid
+    dim3 blocks(BLOCKS, BLOCKS);  // only 1 block is launched
 
-  // Blocks per grid dimension (assumes THREADS divides N evenly)
-  int BLOCKS = N / THREADS;
+    // launch kernel
+    auto start = high_resolution_clock::now();
+    multiply<<<blocks, threads>>>(X, Y, Z, N);
+    cudaMemcpy(C, Z, matrixBytes, cudaMemcpyDeviceToHost);
+    auto stop = high_resolution_clock::now();
 
-  // Use dim3 structs for block  and grid dimensions
-  dim3 threads(THREADS, THREADS);
-  dim3 blocks(BLOCKS, BLOCKS);
+    auto duration = duration_cast<microseconds>(stop-start);
 
-  // Launch kernel
-  multiply<<<blocks, threads>>>(X, Y, Z, N);
+    cout<<"Multiplication A x B: \n";
+    print(C, N);
+    cout<<"Time: "<<duration.count()<<" microseconds"<<endl;
 
-  cudaMemcpy(C, Z, matrixBytes, cudaMemcpyDeviceToHost);
-  cout << "Multiplication of matrix A and B: \n";
-  print(C, N);
+    delete[] A; delete[] B; delete[] C;
+    cudaFree(X); cudaFree(Y); cudaFree(Z);
 
-  delete[] A;
-  delete[] B;
-  delete[] C;
-
-  cudaFree(X);
-  cudaFree(Y);
-  cudaFree(Z);
-
-  return 0;
+    return 0;
 }
-
-// CUDA Driver Check Commands
-// nvidia-smi       # checks if the GPU is visible and drivers are working
-// nvcc --version   # checks if CUDA compiler is installed
-
-// Compile: nvcc -o matrix_mul cuda_mm.cu
-// Run: ./matrix_mul
