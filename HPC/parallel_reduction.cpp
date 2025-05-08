@@ -63,5 +63,5 @@ int main() {
     return 0;
 }
 
-// Compile: g++ -o parallelreduction parallel_reduction.cpp
+// Compile: g++ -fopenmp -o parallelreduction parallel_reduction.cpp
 // Run: ./parallelreduction
